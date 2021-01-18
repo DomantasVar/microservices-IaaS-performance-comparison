@@ -1,0 +1,67 @@
+version: '3.4'
+services:
+    mysql_product:
+      image: mysql:5.6
+      ports:
+        - "3306:3306"
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_USER: node
+        MYSQL_PASSWORD: verysecretpassword
+        MYSQL_DATABASE: products
+      volumes:
+        - ./mysql/init:/docker-entrypoint-initdb.d
+      networks:
+        product:
+           aliases:
+             - mysql
+
+    node_product:
+      build:
+        network: host
+        context: ./node/
+        dockerfile: Dockerfile
+#      image: node
+      depends_on:
+        - mysql_product
+      restart: always
+      ports:
+        - "8000:8000"
+      networks:
+        product:
+          aliases:
+             - node
+
+    react-ui:
+      build:
+        network: host
+        context: ./frontend/
+        dockerfile: Dockerfile
+      ports:
+        - "80:80"
+
+
+    psql_user:
+      image: postgres
+      environment:
+        POSTGRES_USER: "root"
+        POSTGRES_PASSWORD: "root"
+        APP_DB_USER: "java"
+        APP_DB_PASS: "verysecretpassword"
+        APP_DB_NAME: "users"
+      restart: always
+      healthcheck:
+        test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
+        timeout: 45s
+        interval: 10s
+        retries: 10
+      volumes:
+        - "./postgres/postgres.conf:/usr/local/etc/postgres/postgres.conf"
+        - "./postgres/db-data:/var/lib/postgresql/data"
+        - "./postgres/init:/docker-entrypoint-initdb.d/"
+      ports:
+        - 5432:5432
+
+
+networks:
+   product:
