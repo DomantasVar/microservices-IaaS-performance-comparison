@@ -56,8 +56,6 @@ services:
         interval: 10s
         retries: 10
       volumes:
-        - "./postgres/postgres.conf:/usr/local/etc/postgres/postgres.conf"
-        - "./postgres/db-data:/var/lib/postgresql/data"
         - "./postgres/init:/docker-entrypoint-initdb.d/"
       ports:
         - 5432:5432
@@ -65,3 +63,7 @@ services:
 
 networks:
    product:
+
+
+volumes:
+  postgres:
